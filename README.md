@@ -12,6 +12,6 @@ Stay tuned for updates
 - https://github.com/WIZnet-ioLibrary
 
 # io6Library
-io6Library is for dual TCP/IP statck contorller such as W6100.
+io6Library is for dual TCP/IP statck controller such as W6100.
 
 The WIZnet io6Library : https://github.com/Wiznet/io6Library
