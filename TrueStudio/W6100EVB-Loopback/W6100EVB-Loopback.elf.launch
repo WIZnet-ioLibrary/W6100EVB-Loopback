@@ -19,7 +19,7 @@
 <stringAttribute key="com.atollic.hardwaredebug.launch.jtagDevice" value="ST-LINK"/>
 <intAttribute key="com.atollic.hardwaredebug.launch.portNumber" value="61234"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.remoteCommand" value="target extended-remote"/>
-<stringAttribute key="com.atollic.hardwaredebug.launch.runCommands" value="#set character encoding&#13;&#10;set host-charset CP1252&#13;&#10;set target-charset CP1252&#13;&#10;&#13;&#10;#Reset to known state&#13;&#10;monitor reset&#13;&#10;#Load the program executable&#13;&#10;load&#13;&#10;&#13;&#10;quit"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.runCommands" value="# Set flash parallelism mode to 32, 16, or 8 bit when using STM32 F2/F4 microcontrollers&#10;# Uncomment next line, 2=32 bit, 1=16 bit and 0=8 bit parallelism mode&#10;#monitor flash set_parallelism_mode 2&#10;&#10;# Set character encoding&#10;set host-charset CP1252&#10;set target-charset CP1252&#10;&#10;# Reset to known state&#10;monitor reset&#10;&#10;# Load the program executable&#10;load&#9;&#9;&#10;&#10;# Reset the chip to get to a known state. Remove &quot;monitor reset&quot; command &#10;#  if the code is not located at default address and does not run by reset. &#10;monitor reset&#10;&#10;# Enable Debug connection in low power modes (DBGMCU-&gt;CR)&#10;set *0xE0042004 = (*0xE0042004) | 0x7&#10;# Set a breakpoint at main().&#10;tbreak main&#10;&#10;# Run to the breakpoint.&#10;continue"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.serverParam" value="-p 61234 -l 1 -d -s"/>
 <booleanAttribute key="com.atollic.hardwaredebug.launch.startServer" value="true"/>
 <booleanAttribute key="com.atollic.hardwaredebug.launch.swd_mode" value="true"/>
@@ -31,24 +31,21 @@
 <booleanAttribute key="com.atollic.hardwaredebug.launch.useRemoteTarget" value="true"/>
 <booleanAttribute key="com.atollic.hardwaredebug.launch.verify_flash_download" value="true"/>
 <booleanAttribute key="com.atollic.hardwaredebug.stlink.enable_logging" value="false"/>
-<stringAttribute key="com.atollic.hardwaredebug.stlink.log_file" value="I:\99_GitHub\WIZnet_Private\W6100\TestScenario\W6100_TestScenario\TrueStudio\DMA\Debug\st-link_gdbserver_log.txt"/>
+<stringAttribute key="com.atollic.hardwaredebug.stlink.log_file" value="I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB\TrueStudio\W6100EVB-Loopback\Debug\st-link_gdbserver_log.txt"/>
 <booleanAttribute key="com.atollic.hardwaredebug.stlink.stlink_check_serial_number" value="false"/>
 <stringAttribute key="com.atollic.hardwaredebug.stlink.stlink_txt_serial_number" value=""/>
 <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="${TOOLCHAIN_PATH}/arm-atollic-eabi-gdb"/>
 <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
 <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_REGISTER_GROUPS" value=""/>
-<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/DMA.elf"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="DMA"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/W6100EVB-Loopback.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="W6100EVB-Loopback"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/DMA"/>
+<listEntry value="/W6100EVB-Loopback"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
-</listAttribute>
-<listAttribute key="org.eclipse.debug.ui.favoriteGroups">
-<listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;&#13;&#10;"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
