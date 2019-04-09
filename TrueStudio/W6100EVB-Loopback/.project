@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>W6100_Loopback</name>
+	<name>W6100EVB-Loopback</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -25,34 +25,19 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Doxygen</name>
+			<name>io6Library</name>
 			<type>2</type>
-			<location>I:/99_GitHub/WIZet_Reference/W6100/W6100_EVB/Libraries/io6Library/Doxygen</location>
-		</link>
-		<link>
-			<name>Ethernet</name>
-			<type>2</type>
-			<locationURI>io6Library/Ethernet</locationURI>
-		</link>
-		<link>
-			<name>STM32F10x_StdPeriph_Driver</name>
-			<type>2</type>
-			<locationURI>STM32F10x_StdPeriph_Driver</locationURI>
-		</link>
-		<link>
-			<name>loopback</name>
-			<type>2</type>
-			<locationURI>io6Library/Application/loopback</locationURI>
+			<locationURI>$%7Bio6Library%7D</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>
 		<variable>
 			<name>STM32F10x_StdPeriph_Driver</name>
-			<value>$%7BPARENT-2-PROJECT_LOC%7D/Libraries/STM32F10x_StdPeriph_Driver/src</value>
+			<value>$%7BPROJECT_LOC%7D/Drivers/STM32F10x_StdPeriph_Driver/src</value>
 		</variable>
 		<variable>
 			<name>io6Library</name>
-			<value>$%7BPARENT-2-PROJECT_LOC%7D/Libraries/io6Library</value>
+			<value>$%7BPARENT-2-PROJECT_LOC%7D/io6Library</value>
 		</variable>
 	</variableList>
 </projectDescription>
