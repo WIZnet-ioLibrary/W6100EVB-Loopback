@@ -19,6 +19,7 @@ DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
 //================================================================
 #endif
 
+#ifdef USE_STDPERIPH_DRIVER
 void W6100EVBInitialze(void)
 {
 	RCCInitialize();
@@ -42,6 +43,7 @@ void W6100EVBInitialze(void)
 
 	W6100Initialze();
 }
+#endif
 
 void W6100EVBSPICallBack(void)
 {
@@ -104,7 +106,9 @@ uint8_t spiReadByte(void)
 	return SPI_I2S_ReceiveData(W6100_SPI);
 
 #elif defined USE_HAL_DRIVER
-
+	uint8_t rx = 0, tx = 0xFF;
+	HAL_SPI_TransmitReceive(&W6100_SPI, &tx, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
+	return rx;
 #endif
 }
 
@@ -118,7 +122,8 @@ void spiWriteByte(uint8_t byte)
 	SPI_I2S_ReceiveData(W6100_SPI);
 
 #elif defined USE_HAL_DRIVER
-
+	uint8_t rx;
+	HAL_SPI_TransmitReceive(&W6100_SPI, &byte, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
 #endif
 
 }
@@ -282,7 +287,7 @@ inline void csEnable(void)
 	GPIO_ResetBits(W6100_CS_PORT, W6100_CS_PIN);
 
 #elif defined USE_HAL_DRIVER
-
+	HAL_GPIO_WritePin(W6100_CS_PORT, W6100_CS_PIN, GPIO_PIN_RESET);
 #endif
 
 }
@@ -294,7 +299,7 @@ inline void csDisable(void)
 	GPIO_SetBits(W6100_CS_PORT, W6100_CS_PIN);
 
 #elif defined USE_HAL_DRIVER
-
+	HAL_GPIO_WritePin(W6100_CS_PORT, W6100_CS_PIN, GPIO_PIN_SET);
 #endif
 
 }
@@ -306,7 +311,7 @@ inline void resetAssert(void)
 	GPIO_ResetBits(W6100_RESET_PORT, W6100_RESET_PIN);
 
 #elif defined USE_HAL_DRIVER
-
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
 #endif
 
 }
@@ -317,7 +322,7 @@ inline void resetDeassert(void)
 
 	GPIO_SetBits(W6100_RESET_PORT, W6100_RESET_PIN);
 #elif defined USE_HAL_DRIVER
-
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
 #endif
 
 }
@@ -331,7 +336,9 @@ void W6100Reset(void)
 	GPIO_SetBits(W6100_RESET_PORT,W6100_RESET_PIN);
 
 #elif defined USE_HAL_DRIVER
-
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
+	CoTickDelay(10);
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
 #endif
 
 }

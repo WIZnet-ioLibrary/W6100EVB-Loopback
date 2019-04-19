@@ -18,7 +18,7 @@
 
 #elif defined USE_HAL_DRIVER
 	#warning USE_HAL_DRIVER
-
+#include <WIZ_HAL_DEF.h>
 #else
 	#error Error!! STD_DRIVER not defined
 
