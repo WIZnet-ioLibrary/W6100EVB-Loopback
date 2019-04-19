@@ -2,7 +2,7 @@
 #define __HALINIT_H_
 
 #include <stdio.h>
-#include "W6100EVB.h"
+#include "Board.h"
 #include "stm32f10x_conf.h"
 #include "misc.h"
 

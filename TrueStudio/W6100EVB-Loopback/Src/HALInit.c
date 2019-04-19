@@ -4,7 +4,6 @@ extern DMA_InitTypeDef	DMA_RX_InitStructure, DMA_TX_InitStructure;
 
 volatile unsigned long globalTimer = 0;
 
-
 void HardFault_Handler(void)
 {
 	printf("Hard Fault!!!\r\n");

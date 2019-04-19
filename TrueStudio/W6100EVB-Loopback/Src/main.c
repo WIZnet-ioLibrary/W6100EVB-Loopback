@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "W6100EVB.h"
+#include "Board.h"
 #include "loopback.h"
 
 wiz_NetInfo gWIZNETINFO = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},
@@ -111,8 +111,8 @@ int main(void)
 							0xc1, 0x0b, 0x0a, 0xdf,
 							0xea, 0xf4, 0xf4, 0x2d};
 
-	W6100EVBInitialze();
-
+	BoardInitialze();
+	
 	ctlwizchip(CW_SYS_UNLOCK,& syslock);
 	ctlnetwork(CN_SET_NETINFO,&gWIZNETINFO);
 
