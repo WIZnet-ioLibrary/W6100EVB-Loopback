@@ -337,7 +337,7 @@ void W6100Reset(void)
 
 #elif defined USE_HAL_DRIVER
 	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
-	CoTickDelay(10);
+	HAL_Delay(10);
 	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
 #endif
 
