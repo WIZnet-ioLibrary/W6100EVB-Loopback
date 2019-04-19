@@ -1,12 +1,12 @@
 /*
- * W6100EVB.h
+ * board.h
  *
  *  Created on: Apr 19, 2019
  *      Author: taylor
  */
 
-#ifndef W6100EVB_H_
-#define W6100EVB_H_
+#ifndef BOARD_H_
+#define BOARD_H_
 
 #ifdef USE_STDPERIPH_DRIVER
 	#warning USE_STDPERIPH_DRIVER
@@ -36,22 +36,26 @@
 	#endif
 #endif
 
-void W6100EVBInitialze(void);
-void W6100EVBSPICallBack(void);
+void BoardInitialze(void);
+void BoardSPICallBack(void);
 void W6100Initialze(void);
 
 uint8_t spiReadByte(void);
 void spiWriteByte(uint8_t byte);
+
 #if defined SPI_DMA
 uint8_t spiReadBurst(uint8_t* pBuf, uint16_t len);
 void spiWriteBurst(uint8_t* pBuf, uint16_t len);
 #endif
+
 iodata_t busReadByte(uint32_t addr);
 void busWriteByte(uint32_t addr, iodata_t data);
+
 #if defined BUS_DMA
 void busReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc);
 void busWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_inc);
 #endif
+
 void csEnable(void);
 void csDisable(void);
 void resetAssert(void);

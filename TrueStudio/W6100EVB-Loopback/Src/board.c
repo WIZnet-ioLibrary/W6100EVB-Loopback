@@ -1,36 +1,64 @@
-#include "W6100EVB.h"
+#include "board.h"
 
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
 
-#if 0
-//================================================================
+void W6100Initialze(void)
+{
+	intr_kind temp;
+	unsigned char W6100_AdrSet[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
+	//unsigned char W6100_AdrSet[2][8] = {{8,0,0,0,0,0,0,0},{8,0,0,0,0,0,0,0}};
+	/*
+	 */
+	do{
+		if(ctlwizchip(CW_GET_PHYLINK,(void*)&temp) == -1) {
+			printf("Unknown PHY link status.\r\n");
+		}
+	}while(temp == PHY_LINK_OFF);
+	printf("PHY OK.\r\n");
 
+	temp = IK_DEST_UNREACH;
+
+	if(ctlwizchip(CW_INIT_WIZCHIP,(void*)W6100_AdrSet) == -1)
+	{
+		printf("W6100 initialized fail.\r\n");
+	}
+
+	if(ctlwizchip(CW_SET_INTRMASK,&temp) == -1)
+	{
+		printf("W6100 interrupt\r\n");
+	}
+	//printf("interrupt mask: %02x\r\n",getIMR());
+}
+
+void W6100Reset(void)
+{
 #ifdef USE_STDPERIPH_DRIVER
-	#warning USE_STDPERIPH_DRIVER
+
+	GPIO_ResetBits(W6100_RESET_PORT,W6100_RESET_PIN);
+	delay(10);
+	GPIO_SetBits(W6100_RESET_PORT,W6100_RESET_PIN);
 
 #elif defined USE_HAL_DRIVER
-	#warning USE_HAL_DRIVER
 
-#else
-	#warning STD_DRIVER not defined
-
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
+	delay(10);
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
 #endif
 
-//================================================================
-#endif
+}
 
-#ifdef USE_STDPERIPH_DRIVER
-void W6100EVBInitialze(void)
+void BoardInitialze(void)
 {
+#ifdef USE_STDPERIPH_DRIVER
 	RCCInitialize();
 	gpioInitialize();
 	usartInitialize();
 	timerInitialize();
-	W6100EVBSPICallBack();
+	BoardSPICallBack();
 
 	printf("System start.\r\n");
 
-	#if _WIZCHIP_IO_MODE_ == _WIZCHIP_IO_MODE_BUS_INDIR_
+#if _WIZCHIP_IO_MODE_ == _WIZCHIP_IO_MODE_BUS_INDIR_
 	FSMCInitialize();
 #else
 	spiInitailize();
@@ -42,10 +70,10 @@ void W6100EVBInitialze(void)
 	delay(10);
 
 	W6100Initialze();
-}
 #endif
+}
 
-void W6100EVBSPICallBack(void)
+void BoardSPICallBack(void)
 {
 
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
@@ -68,34 +96,6 @@ void W6100EVBSPICallBack(void)
 
 }
 
-void W6100Initialze(void)
-{
-	intr_kind temp;
-	unsigned char W6100_AdrSet[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
-	//unsigned char W6100_AdrSet[2][8] = {{8,0,0,0,0,0,0,0},{8,0,0,0,0,0,0,0}};
-	/*
-	 */
-	do{
-			if(ctlwizchip(CW_GET_PHYLINK,(void*)&temp) == -1){
-				printf("Unknown PHY link status.\r\n");
-			}
-		}while(temp == PHY_LINK_OFF);
-	printf("PHY OK.\r\n");
-
-	temp = IK_DEST_UNREACH;
-
-	if(ctlwizchip(CW_INIT_WIZCHIP,(void*)W6100_AdrSet) == -1)
-	{
-		printf("W6100 initialized fail.\r\n");
-	}
-
-	if(ctlwizchip(CW_SET_INTRMASK,&temp) == -1)
-	{
-		printf("W6100 interrupt\r\n");
-	}
-	//printf("interrupt mask: %02x\r\n",getIMR());
-}
-
 uint8_t spiReadByte(void)
 {
 #ifdef USE_STDPERIPH_DRIVER
@@ -106,6 +106,7 @@ uint8_t spiReadByte(void)
 	return SPI_I2S_ReceiveData(W6100_SPI);
 
 #elif defined USE_HAL_DRIVER
+
 	uint8_t rx = 0, tx = 0xFF;
 	HAL_SPI_TransmitReceive(&W6100_SPI, &tx, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
 	return rx;
@@ -122,6 +123,7 @@ void spiWriteByte(uint8_t byte)
 	SPI_I2S_ReceiveData(W6100_SPI);
 
 #elif defined USE_HAL_DRIVER
+
 	uint8_t rx;
 	HAL_SPI_TransmitReceive(&W6100_SPI, &byte, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
 #endif
@@ -178,8 +180,6 @@ void spiWriteBurst(uint8_t* pBuf, uint16_t len)
 	DMA_Cmd(W6100_DMA_CHANNEL_TX, ENABLE);
 
 	/* Enable SPI Rx/Tx DMA Request*/
-
-
 
 	/* Waiting for the end of Data Transfer */
 	while(DMA_GetFlagStatus(DMA_TX_FLAG) == RESET);
@@ -287,6 +287,7 @@ inline void csEnable(void)
 	GPIO_ResetBits(W6100_CS_PORT, W6100_CS_PIN);
 
 #elif defined USE_HAL_DRIVER
+
 	HAL_GPIO_WritePin(W6100_CS_PORT, W6100_CS_PIN, GPIO_PIN_RESET);
 #endif
 
@@ -299,6 +300,7 @@ inline void csDisable(void)
 	GPIO_SetBits(W6100_CS_PORT, W6100_CS_PIN);
 
 #elif defined USE_HAL_DRIVER
+
 	HAL_GPIO_WritePin(W6100_CS_PORT, W6100_CS_PIN, GPIO_PIN_SET);
 #endif
 
@@ -311,6 +313,7 @@ inline void resetAssert(void)
 	GPIO_ResetBits(W6100_RESET_PORT, W6100_RESET_PIN);
 
 #elif defined USE_HAL_DRIVER
+
 	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
 #endif
 
@@ -321,27 +324,14 @@ inline void resetDeassert(void)
 #ifdef USE_STDPERIPH_DRIVER
 
 	GPIO_SetBits(W6100_RESET_PORT, W6100_RESET_PIN);
+
 #elif defined USE_HAL_DRIVER
+
 	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
 #endif
 
 }
 
-void W6100Reset(void)
-{
-#ifdef USE_STDPERIPH_DRIVER
-
-	GPIO_ResetBits(W6100_RESET_PORT,W6100_RESET_PIN);
-	CoTickDelay(10);
-	GPIO_SetBits(W6100_RESET_PORT,W6100_RESET_PIN);
-
-#elif defined USE_HAL_DRIVER
-	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
-#endif
-
-}
 //
 //void register_read(void)
 //{
