@@ -1,6 +1,5 @@
 //#include <CoOS.h>
-#include "stm32f10x_usart.h"
-#include "HAL_Config.h"
+#include "HALInit.h"
 #include "msgq.h"
 
 //extern OS_MutexID usart_mutex;

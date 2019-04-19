@@ -1,10 +1,30 @@
-#ifndef __W6100RELFUNCTIONS_H_
-#define __W6100RELFUNCTIONS_H_
+/*
+ * W6100EVB.h
+ *
+ *  Created on: Apr 19, 2019
+ *      Author: taylor
+ */
+
+#ifndef W6100EVB_H_
+#define W6100EVB_H_
+
+#ifdef USE_STDPERIPH_DRIVER
+	#warning USE_STDPERIPH_DRIVER
+
+#include "HALInit.h"
+#include "stm32f10x_conf.h"
+#include "serialCommand.h"
+#define DMA
+
+#elif defined USE_HAL_DRIVER
+	#warning USE_HAL_DRIVER
+
+#else
+	#error Error!! STD_DRIVER not defined
+
+#endif
 
 #include "wizchip_conf.h"
-
-
-#define DMA
 
 #if (_WIZCHIP_IO_MODE_==_WIZCHIP_IO_MODE_BUS_INDIR_)
 	#ifdef DMA
@@ -15,6 +35,10 @@
 		#define SPI_DMA
 	#endif
 #endif
+
+void W6100EVBInitialze(void);
+void W6100EVBSPICallBack(void);
+void W6100Initialze(void);
 
 uint8_t spiReadByte(void);
 void spiWriteByte(uint8_t byte);
@@ -38,4 +62,5 @@ void W6100Reset(void);
 //todo for test
 void register_read(void);
 void socket_register_read(uint8_t sn);
-#endif
+
+#endif /* W6100EVB_H_ */

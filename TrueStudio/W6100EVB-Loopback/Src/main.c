@@ -1,13 +1,5 @@
 #include <stdio.h>
-#include "HAL_Config.h"
-#include "HALInit.h"
-#include "wizchip_conf.h"
-#include "inttypes.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_exti.h"
-#include "W6100RelFunctions.h"
-#include "serialCommand.h"
-#include "stm32f10x_rcc.h"
+#include "W6100EVB.h"
 #include "loopback.h"
 
 wiz_NetInfo gWIZNETINFO = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},
@@ -119,48 +111,10 @@ int main(void)
 							0xc1, 0x0b, 0x0a, 0xdf,
 							0xea, 0xf4, 0xf4, 0x2d};
 
-	RCC_ClocksTypeDef RCCA_TypeDef;
-	RCCInitialize();
-	gpioInitialize();
-	usartInitialize();
-	timerInitialize();
-	printf("System start.\r\n");
+	W6100EVBInitialze();
 
-
-
-
-#if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
-	/* SPI method callback registration */
-	#if defined SPI_DMA
-		reg_wizchip_spi_cbfunc(spiReadByte, spiWriteByte,spiReadBurst,spiWriteBurst);
-	#else
-		reg_wizchip_spi_cbfunc(spiReadByte, spiWriteByte,0,0);
-	#endif
-	/* CS function register */
-	reg_wizchip_cs_cbfunc(csEnable,csDisable);
-#else
-	/* Indirect bus method callback registration */
-	#if defined BUS_DMA
-			reg_wizchip_bus_cbfunc(busReadByte, busWriteByte,busReadBurst,busWriteBurst);
-	#else
-			reg_wizchip_bus_cbfunc(busReadByte, busWriteByte,0,0);
-	#endif
-#endif
-#if _WIZCHIP_IO_MODE_ == _WIZCHIP_IO_MODE_BUS_INDIR_
-	FSMCInitialize();
-#else
-	spiInitailize();
-#endif
-
-	resetAssert();
-	delay(10);
-	resetDeassert();
-	delay(10);
-
-	W6100Initialze();
 	ctlwizchip(CW_SYS_UNLOCK,& syslock);
 	ctlnetwork(CN_SET_NETINFO,&gWIZNETINFO);
-
 
 	printf("Register value after W6100 initialize!\r\n");
 
