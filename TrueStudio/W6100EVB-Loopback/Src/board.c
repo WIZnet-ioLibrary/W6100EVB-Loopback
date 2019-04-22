@@ -1,6 +1,10 @@
 #include "board.h"
 
+#ifdef USE_STDPERIPH_DRIVER
+
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
+
+#endif
 
 void W6100Initialze(void)
 {
