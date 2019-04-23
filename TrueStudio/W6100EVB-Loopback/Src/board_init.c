@@ -4,9 +4,15 @@
 
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
 
+#elif defined USE_HAL_DRIVER
+SPI_HandleTypeDef W6100_SPI;
+void spi_set_func(SPI_HandleTypeDef *SPI_n)
+{
+	W6100_SPI = *SPI_n;
+}
 #endif
 
-extern wiz_InitInfo myW6100;
+wiz_InitInfo W6100_Info;
 
 void BoardInitialze(void)
 {
@@ -23,43 +29,44 @@ void BoardInitialze(void)
 #else
 	spiInitailize();
 #endif
-
+#endif
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
 	/* SPI method callback registration */
 	#if defined SPI_DMA
-	myW6100.spi_rb = spiReadByte;
-	myW6100.spi_wb = spiWriteByte;
-	myW6100.spi_rbuf = spiReadBurst;
-	myW6100.spi_wbuf = spiWriteBurst;
+	W6100_Info.spi_rb = spiReadByte;
+	W6100_Info.spi_wb = spiWriteByte;
+	W6100_Info.spi_rbuf = spiReadBurst;
+	W6100_Info.spi_wbuf = spiWriteBurst;
 	#else
-	myW6100.spi_rb = spiReadByte;
-	myW6100.spi_wb = spiWriteByte;
-	myW6100.spi_rbuf = NULL;
-	myW6100.spi_wbuf = NULL;
+	W6100_Info.spi_rb = spiReadByte;
+	W6100_Info.spi_wb = spiWriteByte;
+	W6100_Info.spi_rbuf = NULL;
+	W6100_Info.spi_wbuf = NULL;
 	#endif
 	/* CS function register */
-	myW6100.cs_sel = csEnable;
-	myW6100.cs_desel = csDisable;
+	W6100_Info.cs_sel = csEnable;
+	W6100_Info.cs_desel = csDisable;
 #else
 	/* Indirect bus method callback registration */
 	#if defined BUS_DMA
-	myW6100.bus_rd = busReadByte;
-	myW6100.bus_wd = busWriteByte;
-	myW6100.bus_rbuf = busReadBurst;
-	myW6100.bus_wbuf = busWriteBurst;
+	W6100_Info.bus_rd = busReadByte;
+	W6100_Info.bus_wd = busWriteByte;
+	W6100_Info.bus_rbuf = busReadBurst;
+	W6100_Info.bus_wbuf = busWriteBurst;
 	#else
-	myW6100.bus_rd = busReadByte;
-	myW6100.bus_wd = busWriteByte;
-	myW6100.bus_rbuf = NULL;
-	myW6100.bus_wbuf = NULL;
+	W6100_Info.bus_rd = busReadByte;
+	W6100_Info.bus_wd = busWriteByte;
+	W6100_Info.bus_rbuf = NULL;
+	W6100_Info.bus_wbuf = NULL;
 	#endif
 #endif
 
-	myW6100.resetAssert = resetAssert;
-	myW6100.resetDeassert = resetDeassert;
-	
+	//wizchip_init_Reset_Func(resetAssert, resetDeassert);
+	W6100_Info.resetAssert = resetAssert;
+	W6100_Info.resetDeassert = resetDeassert;
+	wizchip_init_info(&W6100_Info);
 	W6100Initialze();
-#endif
+
 }
 
 uint8_t spiReadByte(void)

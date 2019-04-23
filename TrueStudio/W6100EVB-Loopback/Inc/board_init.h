@@ -20,6 +20,19 @@
 
 #elif defined USE_HAL_DRIVER
 	#warning USE_HAL_DRIVER
+#include "main.h"
+
+/* RESET */
+#define W6100_RESET_PIN		    GPIO_PIN_8
+#define W6100_RESET_PORT		GPIOD
+
+/* SPI2 */
+#define W6100_CS_PIN			GPIO_PIN_7
+#define W6100_CS_PORT			GPIOD
+
+#define W6100_SPI_SIZE          1
+#define W6100_SPI_TIMEOUT       10
+void spi_set_func(SPI_HandleTypeDef *SPI_n);
 #else
 	#error Error!! STD_DRIVER not defined
 

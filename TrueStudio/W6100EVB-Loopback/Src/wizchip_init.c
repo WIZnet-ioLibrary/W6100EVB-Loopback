@@ -4,11 +4,17 @@ wiz_InitInfo myW6100;
 
 void W6100Initialze(void)
 {
+#ifdef USE_STDPERIPH_DRIVER
 	myW6100.resetAssert();
 	delay(10);
 	myW6100.resetDeassert();
 	delay(10);
-
+#elif defined USE_HAL_DRIVER
+	myW6100.resetAssert();
+	HAL_Delay(10);
+	myW6100.resetDeassert();
+	HAL_Delay(10);
+#endif
 	io6LibraryCallBack();
 
 	intr_kind temp;
@@ -36,6 +42,11 @@ void W6100Initialze(void)
 	//printf("interrupt mask: %02x\r\n",getIMR());
 }
 
+void wizchip_init_info(wiz_InitInfo *wiz_info)
+{
+	myW6100 = *wiz_info;
+}
+
 void io6LibraryCallBack(void)
 {
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
@@ -59,10 +70,17 @@ void io6LibraryCallBack(void)
 
 void W6100Reset(void)
 {
+#ifdef USE_STDPERIPH_DRIVER
 	myW6100.resetAssert();
 	delay(10);
 	myW6100.resetDeassert();
 	delay(10);
+#elif defined USE_HAL_DRIVER
+	myW6100.resetAssert();
+	HAL_Delay(10);
+	myW6100.resetDeassert();
+	HAL_Delay(10);
+#endif
 }
 
 #ifdef WIZCHIP_REGISTER_DUMP

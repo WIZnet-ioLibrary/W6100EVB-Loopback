@@ -24,6 +24,8 @@ typedef struct wiz_InitInfo_t
 
 }wiz_InitInfo;
 
+
+void wizchip_init_info(wiz_InitInfo *wiz_info);
 void W6100Initialze(void);
 void io6LibraryCallBack(void);
 void W6100Reset(void);
