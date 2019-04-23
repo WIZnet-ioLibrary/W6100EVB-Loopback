@@ -42,6 +42,11 @@ void W6100Initialze(void)
 	//printf("interrupt mask: %02x\r\n",getIMR());
 }
 
+void wizchip_init_info(wiz_InitInfo *wiz_info)
+{
+	myW6100 = *wiz_info;
+}
+
 void io6LibraryCallBack(void)
 {
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
