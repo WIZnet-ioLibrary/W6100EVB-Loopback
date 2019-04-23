@@ -23,7 +23,7 @@ void BoardInitialze(void)
 #else
 	spiInitailize();
 #endif
-
+#endif
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
 	/* SPI method callback registration */
 	#if defined SPI_DMA
@@ -59,7 +59,7 @@ void BoardInitialze(void)
 	myW6100.resetDeassert = resetDeassert;
 	
 	W6100Initialze();
-#endif
+
 }
 
 uint8_t spiReadByte(void)
