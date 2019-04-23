@@ -1,5 +1,4 @@
-//#include <CoOS.h>
-#include "HALInit.h"
+#include "mcu_init.h"
 #include "msgq.h"
 
 //extern OS_MutexID usart_mutex;
@@ -84,7 +83,6 @@ char _getchar_b()
 	  queue_get(&c);
 	  return c;
 }
-
 
 uint16_t gets_echo(uint8_t* buf, uint16_t maxlen)
 {

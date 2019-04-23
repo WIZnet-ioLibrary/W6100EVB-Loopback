@@ -1,5 +1,7 @@
+//#define USE_STDPERIPH_DRIVER
+
 /*
- * board.h
+ * board_init.h
  *
  *  Created on: Apr 19, 2019
  *      Author: taylor
@@ -24,6 +26,7 @@
 #endif
 
 #include "wizchip_conf.h"
+#include "wizchip_init.h"
 
 #if (_WIZCHIP_IO_MODE_==_WIZCHIP_IO_MODE_BUS_INDIR_)
 	#ifdef DMA
@@ -36,8 +39,6 @@
 #endif
 
 void BoardInitialze(void);
-void BoardSPICallBack(void);
-void W6100Initialze(void);
 
 uint8_t spiReadByte(void);
 void spiWriteByte(uint8_t byte);

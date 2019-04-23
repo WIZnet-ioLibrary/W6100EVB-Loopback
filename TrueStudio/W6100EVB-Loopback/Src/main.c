@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "Board.h"
+#include "board_init.h"
 #include "loopback.h"
 
 wiz_NetInfo gWIZNETINFO = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},

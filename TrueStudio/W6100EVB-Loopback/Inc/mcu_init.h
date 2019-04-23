@@ -1,3 +1,5 @@
+//#define USE_STDPERIPH_DRIVER
+
 #ifndef __MCU_INIT_H__
 #define __MCU_INIT_H__
 
