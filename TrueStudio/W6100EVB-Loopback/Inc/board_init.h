@@ -5,20 +5,19 @@
  *      Author: taylor
  */
 
-#ifndef BOARD_H_
-#define BOARD_H_
+#ifndef __BOARD_INIT_H__
+#define __BOARD_INIT_H__
 
+#include "mcu_init.h"
 #ifdef USE_STDPERIPH_DRIVER
 	#warning USE_STDPERIPH_DRIVER
 
-#include "HALInit.h"
 #include "stm32f10x_conf.h"
 #include "serialCommand.h"
 #define DMA
 
 #elif defined USE_HAL_DRIVER
 	#warning USE_HAL_DRIVER
-#include <WIZ_HAL_DEF.h>
 #else
 	#error Error!! STD_DRIVER not defined
 

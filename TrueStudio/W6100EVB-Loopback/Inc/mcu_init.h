@@ -1,8 +1,10 @@
-#ifndef __HALINIT_H_
-#define __HALINIT_H_
+#ifndef __MCU_INIT_H__
+#define __MCU_INIT_H__
+
+#ifdef USE_STDPERIPH_DRIVER
 
 #include <stdio.h>
-#include "Board.h"
+#include "Board_init.h"
 #include "stm32f10x_conf.h"
 #include "misc.h"
 
@@ -86,5 +88,23 @@ extern volatile unsigned long globalTimer;
 
 void TIM2_settimer(void);
 unsigned long TIM2_gettimer(void);
+
+#elif defined USE_HAL_DRIVER
+
+#include "main.h"
+extern SPI_HandleTypeDef hspi2;
+
+/* RESET */
+#define W6100_RESET_PIN		    GPIO_PIN_8
+#define W6100_RESET_PORT		GPIOD
+
+/* SPI2 */
+#define W6100_CS_PIN			GPIO_PIN_7
+#define W6100_CS_PORT			GPIOD
+
+#define W6100_SPI               hspi2
+#define W6100_SPI_SIZE          1
+#define W6100_SPI_TIMEOUT       10
+#endif
 
 #endif

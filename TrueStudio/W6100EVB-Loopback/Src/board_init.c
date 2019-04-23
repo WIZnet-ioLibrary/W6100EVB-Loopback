@@ -1,4 +1,4 @@
-#include "board.h"
+#include "board_init.h"
 
 #ifdef USE_STDPERIPH_DRIVER
 
