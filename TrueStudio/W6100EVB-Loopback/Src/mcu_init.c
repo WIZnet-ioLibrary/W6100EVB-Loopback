@@ -1,5 +1,5 @@
 #include "mcu_init.h"
-
+#ifdef USE_STDPERIPH_DRIVER
 extern DMA_InitTypeDef	DMA_RX_InitStructure, DMA_TX_InitStructure;
 
 volatile unsigned long globalTimer = 0;
@@ -458,3 +458,4 @@ void FSMCHighSpeed()
 
 
 }
+#endif
