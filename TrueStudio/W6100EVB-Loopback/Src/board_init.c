@@ -12,10 +12,11 @@ void spi_set_func(SPI_HandleTypeDef *SPI_n)
 }
 #endif
 
-wiz_InitInfo W6100_Info;
 
 void BoardInitialze(void)
 {
+	wiz_InitInfo W6100_Info;
+
 #ifdef USE_STDPERIPH_DRIVER
 	RCCInitialize();
 	gpioInitialize();
@@ -30,6 +31,7 @@ void BoardInitialze(void)
 	spiInitailize();
 #endif
 #endif
+
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
 	/* SPI method callback registration */
 	#if defined SPI_DMA
@@ -40,8 +42,8 @@ void BoardInitialze(void)
 	#else
 	W6100_Info.spi_rb = spiReadByte;
 	W6100_Info.spi_wb = spiWriteByte;
-	W6100_Info.spi_rbuf = NULL;
-	W6100_Info.spi_wbuf = NULL;
+	W6100_Info.spi_rbuf = spiDummyReadBurst;
+	W6100_Info.spi_wbuf = spiDummyWriteBurst;
 	#endif
 	/* CS function register */
 	W6100_Info.cs_sel = csEnable;
@@ -56,15 +58,14 @@ void BoardInitialze(void)
 	#else
 	W6100_Info.bus_rd = busReadByte;
 	W6100_Info.bus_wd = busWriteByte;
-	W6100_Info.bus_rbuf = NULL;
-	W6100_Info.bus_wbuf = NULL;
+	W6100_Info.bus_rbuf = spiDummyReadBurst;
+	W6100_Info.bus_wbuf = spiDummyWriteBurst;
 	#endif
 #endif
-
-	//wizchip_init_Reset_Func(resetAssert, resetDeassert);
 	W6100_Info.resetAssert = resetAssert;
 	W6100_Info.resetDeassert = resetDeassert;
 	wizchip_init_info(&W6100_Info);
+	
 	W6100Initialze();
 
 }
@@ -101,6 +102,17 @@ void spiWriteByte(uint8_t byte)
 	HAL_SPI_TransmitReceive(&W6100_SPI, &byte, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
 #endif
 
+}
+
+uint8_t spiDummyReadBurst(uint8_t* pBuf, uint16_t len)
+{
+	printf("spiReadBurst is not exist\r\n");
+	return 0;
+}
+
+void spiDummyWriteBurst(uint8_t* pBuf, uint16_t len)
+{
+	printf("spiWriteBurst is not exist\r\n");
 }
 
 uint8_t spiReadBurst(uint8_t* pBuf, uint16_t len)
