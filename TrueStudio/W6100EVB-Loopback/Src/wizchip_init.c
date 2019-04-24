@@ -18,7 +18,7 @@ void W6100Initialze(void)
 	#if defined SPI_DMA
 	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, W6100SpiReadBurst, W6100SpiWriteBurst);
 	#else
-	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, NULL, NULL);
+	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, 0, 0);
 	#endif
 	/* CS function register */
 	reg_wizchip_cs_cbfunc(W6100CsEnable, W6100CsDisable);
@@ -27,7 +27,7 @@ void W6100Initialze(void)
 	#if defined BUS_DMA
 	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, W6100BusReadBurst, W6100BusWriteBurst);
 	#else
-	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, NULL, NULL);
+	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, 0, 0);
 	#endif
 #endif
 
