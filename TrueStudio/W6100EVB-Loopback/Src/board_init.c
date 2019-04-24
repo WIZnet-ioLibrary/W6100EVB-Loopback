@@ -4,61 +4,24 @@
 
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
 
-#endif
-
-void W6100Initialze(void)
-{
-	intr_kind temp;
-	unsigned char W6100_AdrSet[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
-	//unsigned char W6100_AdrSet[2][8] = {{8,0,0,0,0,0,0,0},{8,0,0,0,0,0,0,0}};
-	/*
-	 */
-	do{
-		if(ctlwizchip(CW_GET_PHYLINK,(void*)&temp) == -1) {
-			printf("Unknown PHY link status.\r\n");
-		}
-	}while(temp == PHY_LINK_OFF);
-	printf("PHY OK.\r\n");
-
-	temp = IK_DEST_UNREACH;
-
-	if(ctlwizchip(CW_INIT_WIZCHIP,(void*)W6100_AdrSet) == -1)
-	{
-		printf("W6100 initialized fail.\r\n");
-	}
-
-	if(ctlwizchip(CW_SET_INTRMASK,&temp) == -1)
-	{
-		printf("W6100 interrupt\r\n");
-	}
-	//printf("interrupt mask: %02x\r\n",getIMR());
-}
-
-void W6100Reset(void)
-{
-#ifdef USE_STDPERIPH_DRIVER
-
-	GPIO_ResetBits(W6100_RESET_PORT,W6100_RESET_PIN);
-	delay(10);
-	GPIO_SetBits(W6100_RESET_PORT,W6100_RESET_PIN);
-
 #elif defined USE_HAL_DRIVER
-
-	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
-	delay(10);
-	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
+SPI_HandleTypeDef W6100_SPI;
+void spi_set_func(SPI_HandleTypeDef *SPI_n)
+{
+	W6100_SPI = *SPI_n;
+}
 #endif
 
-}
 
 void BoardInitialze(void)
 {
+	wiz_InitInfo W6100_Info;
+
 #ifdef USE_STDPERIPH_DRIVER
 	RCCInitialize();
 	gpioInitialize();
 	usartInitialize();
 	timerInitialize();
-	BoardSPICallBack();
 
 	printf("System start.\r\n");
 
@@ -67,36 +30,43 @@ void BoardInitialze(void)
 #else
 	spiInitailize();
 #endif
-
-	resetAssert();
-	delay(10);
-	resetDeassert();
-	delay(10);
-
-	W6100Initialze();
 #endif
-}
-
-void BoardSPICallBack(void)
-{
 
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
 	/* SPI method callback registration */
 	#if defined SPI_DMA
-		reg_wizchip_spi_cbfunc(spiReadByte, spiWriteByte,spiReadBurst,spiWriteBurst);
+	W6100_Info.spi_rb = spiReadByte;
+	W6100_Info.spi_wb = spiWriteByte;
+	W6100_Info.spi_rbuf = spiReadBurst;
+	W6100_Info.spi_wbuf = spiWriteBurst;
 	#else
-		reg_wizchip_spi_cbfunc(spiReadByte, spiWriteByte,0,0);
+	W6100_Info.spi_rb = spiReadByte;
+	W6100_Info.spi_wb = spiWriteByte;
+	W6100_Info.spi_rbuf = spiDummyReadBurst;
+	W6100_Info.spi_wbuf = spiDummyWriteBurst;
 	#endif
 	/* CS function register */
-	reg_wizchip_cs_cbfunc(csEnable,csDisable);
+	W6100_Info.cs_sel = csEnable;
+	W6100_Info.cs_desel = csDisable;
 #else
 	/* Indirect bus method callback registration */
 	#if defined BUS_DMA
-			reg_wizchip_bus_cbfunc(busReadByte, busWriteByte,busReadBurst,busWriteBurst);
+	W6100_Info.bus_rd = busReadByte;
+	W6100_Info.bus_wd = busWriteByte;
+	W6100_Info.bus_rbuf = busReadBurst;
+	W6100_Info.bus_wbuf = busWriteBurst;
 	#else
-			reg_wizchip_bus_cbfunc(busReadByte, busWriteByte,0,0);
+	W6100_Info.bus_rd = busReadByte;
+	W6100_Info.bus_wd = busWriteByte;
+	W6100_Info.bus_rbuf = spiDummyReadBurst;
+	W6100_Info.bus_wbuf = spiDummyWriteBurst;
 	#endif
 #endif
+	W6100_Info.resetAssert = resetAssert;
+	W6100_Info.resetDeassert = resetDeassert;
+	wizchip_init_info(&W6100_Info);
+	
+	W6100Initialze();
 
 }
 
@@ -134,6 +104,17 @@ void spiWriteByte(uint8_t byte)
 
 }
 
+uint8_t spiDummyReadBurst(uint8_t* pBuf, uint16_t len)
+{
+	printf("spiReadBurst is not exist\r\n");
+	return 0;
+}
+
+void spiDummyWriteBurst(uint8_t* pBuf, uint16_t len)
+{
+	printf("spiWriteBurst is not exist\r\n");
+}
+
 uint8_t spiReadBurst(uint8_t* pBuf, uint16_t len)
 {
 #ifdef USE_STDPERIPH_DRIVER
@@ -153,7 +134,6 @@ uint8_t spiReadBurst(uint8_t* pBuf, uint16_t len)
 	/* Waiting for the end of Data Transfer */
 	while(DMA_GetFlagStatus(DMA_TX_FLAG) == RESET);
 	while(DMA_GetFlagStatus(DMA_RX_FLAG) == RESET);
-
 
 	DMA_ClearFlag(DMA_TX_FLAG | DMA_RX_FLAG);
 
@@ -200,23 +180,14 @@ void spiWriteBurst(uint8_t* pBuf, uint16_t len)
 
 }
 
-//(*bus_wb)(uint32_t addr, iodata_t wb);
 void busWriteByte(uint32_t addr, iodata_t data)
 {
 
-//	(*((volatile uint8_t*)(W6100Address+1))) = (uint8_t)((addr &0xFF00)>>8);
-//	(*((volatile uint8_t*)(W6100Address+2))) = (uint8_t)((addr) & 0x00FF);
-//	(*((volatile uint8_t*)(W6100Address+3))) = data;
 	(*(volatile uint8_t*)(addr)) = data;
 }
 
-//iodata_t (*bus_rb)(uint32_t addr);
 iodata_t busReadByte(uint32_t addr)
 {
-
-//	(*((volatile uint8_t*)(W6100Address+1))) = (uint8_t)((addr &0xFF00)>>8);
-//	(*((volatile uint8_t*)(W6100Address+2))) = (uint8_t)((addr) & 0x00FF);
-//	return  (*((volatile uint8_t*)(W6100Address+3)));
 	return (*((volatile uint8_t*)(addr)));
 }
 
@@ -256,7 +227,6 @@ void busWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_inc)
 
 }
 
-
 void busReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc)
 {
 #ifdef USE_STDPERIPH_DRIVER
@@ -282,7 +252,6 @@ void busReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc)
 #endif
 
 }
-
 
 inline void csEnable(void)
 {
@@ -335,38 +304,3 @@ inline void resetDeassert(void)
 #endif
 
 }
-
-//
-//void register_read(void)
-//{
-//
-//
-//	int i;
-//	printf("                    ----register read----\r\n");
-//	printf("Address | ");
-//	for(i = 0 ; i < 16 ; i++)
-//	  printf("%02x ",i);
-//	printf("\r\n---------------------------------------------------------");
-//	for(i = 0 ; i < 0x0090 ; i++)
-//	{
-//	  if(i%16 == 0) printf("\r\n  %04x  | ", i);
-//	  printf("%02x ",WIZCHIP_READ(_W6100_IO_BASE_ + (i << 8) + (WIZCHIP_CREG_BLOCK << 3)));
-//	}
-//	printf("\r\n");
-//}
-//
-//void socket_register_read(uint8_t sn)
-//{
-//	int i;
-//	printf("                    ----Sn register read----\r\n");
-//	printf("Address | ");
-//	for(i = 0 ; i < 16 ; i++)
-//	  printf("%02x ",i);
-//	printf("\r\n---------------------------------------------------------");
-//	for(i = 0x400+(sn*(0x100)) ; i < 0x400+(sn*(0x100)+0x35) ; i++)
-//	{
-//	  if(i%16 == 0) printf("\r\n0x%04x  | ", i);
-//	  printf("%02x ",WIZCHIP_READ(i));
-//	}
-//	printf("\r\n");
-//}
