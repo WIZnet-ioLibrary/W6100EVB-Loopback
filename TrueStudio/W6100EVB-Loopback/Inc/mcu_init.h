@@ -1,5 +1,3 @@
-//#define USE_STDPERIPH_DRIVER
-
 #ifndef __MCU_INIT_H__
 #define __MCU_INIT_H__
 
@@ -9,8 +7,11 @@
 #include "stm32f10x_conf.h"
 #include "misc.h"
 
-//#define SPI_1
-#define SPI_2  //W6100 EVB
+// For Ethernet Shield
+//#define SPI_1	
+
+// For EVB
+#define SPI_2
 
 #define PRINTF_USART			USART1
 #define PRINTF_USART_RCC		RCC_APB2Periph_USART1

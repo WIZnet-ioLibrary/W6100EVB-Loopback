@@ -1,5 +1,3 @@
-//#define USE_STDPERIPH_DRIVER
-
 /*
  * board_init.h
  *
