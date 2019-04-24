@@ -1,21 +1,30 @@
 #include "wizchip_init.h"
 
-wiz_InitInfo myW6100;
+#ifdef USE_STDPERIPH_DRIVER
+DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
+#endif
 
 void W6100Initialze(void)
 {
-#ifdef USE_STDPERIPH_DRIVER
-	myW6100.resetAssert();
-	delay(10);
-	myW6100.resetDeassert();
-	delay(10);
-#elif defined USE_HAL_DRIVER
-	myW6100.resetAssert();
-	HAL_Delay(10);
-	myW6100.resetDeassert();
-	HAL_Delay(10);
+	W6100Reset();
+
+#if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
+/* SPI method callback registration */
+	#if defined SPI_DMA
+	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, W6100SpiReadBurst, W6100SpiWriteBurst);
+	#else
+	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, W6100SpiDummyReadBurst, W6100SpiDummyWriteBurst);
+	#endif
+	/* CS function register */
+	reg_wizchip_cs_cbfunc(W6100CsEnable, W6100CsDisable);
+#else
+/* Indirect bus method callback registration */
+	#if defined BUS_DMA
+	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, W6100BusReadBurst, W6100BusWriteBurst);
+	#else
+	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, 0, 0);
+	#endif
 #endif
-	io6LibraryCallBack();
 
 	intr_kind temp;
 	unsigned char W6100_AdrSet[2][8] = {{2, 2, 2, 2, 2, 2, 2, 2}, {2, 2, 2, 2, 2, 2, 2, 2}};
@@ -42,50 +51,261 @@ void W6100Initialze(void)
 	//printf("interrupt mask: %02x\r\n",getIMR());
 }
 
-void wizchip_init_info(wiz_InitInfo *wiz_info)
+uint8_t W6100SpiReadByte(void)
 {
-	myW6100 = *wiz_info;
+#ifdef USE_STDPERIPH_DRIVER
+
+	while (SPI_I2S_GetFlagStatus(W6100_SPI, SPI_I2S_FLAG_TXE) == RESET);
+	SPI_I2S_SendData(W6100_SPI, 0xff);
+	while (SPI_I2S_GetFlagStatus(W6100_SPI, SPI_I2S_FLAG_RXNE) == RESET);
+	return SPI_I2S_ReceiveData(W6100_SPI);
+
+#elif defined USE_HAL_DRIVER
+
+	uint8_t rx = 0, tx = 0xFF;
+	HAL_SPI_TransmitReceive(&W6100_SPI, &tx, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
+	return rx;
+#elif defined USE_HAL_DRIVER
+
+	// Sppi read
+#endif
 }
 
-void io6LibraryCallBack(void)
+void W6100SpiWriteByte(uint8_t byte)
 {
-#if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
-/* SPI method callback registration */
-#if defined SPI_DMA
-	reg_wizchip_spi_cbfunc(myW6100.spi_rb, myW6100.spi_wb, myW6100.spi_rbuf, myW6100.spi_wbuf);
-#else
-	reg_wizchip_spi_cbfunc(myW6100.spi_rb, myW6100.spi_wb, 0, 0);
+#ifdef USE_STDPERIPH_DRIVER
+
+	while (SPI_I2S_GetFlagStatus(W6100_SPI, SPI_I2S_FLAG_TXE) == RESET);
+	SPI_I2S_SendData(W6100_SPI, byte);
+	while (SPI_I2S_GetFlagStatus(W6100_SPI, SPI_I2S_FLAG_RXNE) == RESET);
+	SPI_I2S_ReceiveData(W6100_SPI);
+
+#elif defined USE_HAL_DRIVER
+
+	uint8_t rx;
+	HAL_SPI_TransmitReceive(&W6100_SPI, &byte, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
 #endif
-	/* CS function register */
-	reg_wizchip_cs_cbfunc(myW6100.cs_sel, myW6100.cs_desel);
-#else
-/* Indirect bus method callback registration */
-#if defined BUS_DMA
-	reg_wizchip_bus_cbfunc(myW6100.bus_rd, myW6100.bus_wd, myW6100.bus_rbuf, myW6100.bus_wbuf);
-#else
-	reg_wizchip_bus_cbfunc(myW6100.bus_rd, myW6100.bus_wd, 0, 0);
+
+}
+
+uint8_t W6100SpiDummyReadBurst(uint8_t* pBuf, uint16_t len)
+{
+	printf("spiReadBurst is not exist\r\n");
+	return 0;
+}
+
+void W6100SpiDummyWriteBurst(uint8_t* pBuf, uint16_t len)
+{
+	printf("spiWriteBurst is not exist\r\n");
+}
+
+uint8_t W6100SpiReadBurst(uint8_t* pBuf, uint16_t len)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	unsigned char tempbuf =0xff;
+	DMA_TX_InitStructure.DMA_BufferSize = len;
+	DMA_TX_InitStructure.DMA_MemoryBaseAddr = &tempbuf;
+	//DMA_TX_InitStructure.DMA_Mode = DMA_Mode_Circular;
+	DMA_Init(W6100_DMA_CHANNEL_TX, &DMA_TX_InitStructure);
+
+	DMA_RX_InitStructure.DMA_BufferSize = len;
+	DMA_RX_InitStructure.DMA_MemoryBaseAddr = pBuf;
+	DMA_Init(W6100_DMA_CHANNEL_RX, &DMA_RX_InitStructure);
+	/* Enable SPI Rx/Tx DMA Request*/
+	DMA_Cmd(W6100_DMA_CHANNEL_RX, ENABLE);
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, ENABLE);
+	/* Waiting for the end of Data Transfer */
+	while(DMA_GetFlagStatus(DMA_TX_FLAG) == RESET);
+	while(DMA_GetFlagStatus(DMA_RX_FLAG) == RESET);
+
+	DMA_ClearFlag(DMA_TX_FLAG | DMA_RX_FLAG);
+
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, DISABLE);
+	DMA_Cmd(W6100_DMA_CHANNEL_RX, DISABLE);
+
+#elif defined USE_HAL_DRIVER
+
 #endif
+
+}
+
+void W6100SpiWriteBurst(uint8_t* pBuf, uint16_t len)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	unsigned char tempbuf;
+	DMA_TX_InitStructure.DMA_BufferSize = len;
+	DMA_TX_InitStructure.DMA_MemoryBaseAddr = pBuf;
+	DMA_Init(W6100_DMA_CHANNEL_TX, &DMA_TX_InitStructure);
+
+	DMA_RX_InitStructure.DMA_BufferSize = 1;
+	DMA_RX_InitStructure.DMA_MemoryBaseAddr = &tempbuf;
+	DMA_RX_InitStructure.DMA_Mode = DMA_Mode_Circular;
+	DMA_Init(W6100_DMA_CHANNEL_RX, &DMA_RX_InitStructure);
+
+	DMA_Cmd(W6100_DMA_CHANNEL_RX, ENABLE);
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, ENABLE);
+
+	/* Enable SPI Rx/Tx DMA Request*/
+
+	/* Waiting for the end of Data Transfer */
+	while(DMA_GetFlagStatus(DMA_TX_FLAG) == RESET);
+	while(DMA_GetFlagStatus(DMA_RX_FLAG) == RESET);
+
+	DMA_ClearFlag(DMA_TX_FLAG | DMA_RX_FLAG);
+
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, DISABLE);
+	DMA_Cmd(W6100_DMA_CHANNEL_RX, DISABLE);
+
+#elif defined USE_HAL_DRIVER
+
 #endif
+
+}
+
+void W6100BusWriteByte(uint32_t addr, iodata_t data)
+{
+	(*(volatile uint8_t*)(addr)) = data;
+}
+
+iodata_t W6100BusReadByte(uint32_t addr)
+{
+	return (*((volatile uint8_t*)(addr)));
+}
+
+void W6100BusWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_inc)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	if(addr_inc){
+	 	DMA_TX_InitStructure.DMA_MemoryInc  = DMA_MemoryInc_Enable;
+
+	}
+	else 	DMA_TX_InitStructure.DMA_MemoryInc  = DMA_MemoryInc_Disable;
+
+
+	DMA_TX_InitStructure.DMA_BufferSize = len;
+	DMA_TX_InitStructure.DMA_MemoryBaseAddr = addr;
+	DMA_TX_InitStructure.DMA_PeripheralBaseAddr = pBuf;
+
+	DMA_Init(W6100_DMA_CHANNEL_TX, &DMA_TX_InitStructure);
+
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, ENABLE);
+
+	/* Enable SPI Rx/Tx DMA Request*/
+
+
+	/* Waiting for the end of Data Transfer */
+	while(DMA_GetFlagStatus(DMA_TX_FLAG) == RESET);
+
+
+	DMA_ClearFlag(DMA_TX_FLAG);
+
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, DISABLE);
+
+#elif defined USE_HAL_DRIVER
+
+#endif
+
+}
+
+void W6100BusReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	DMA_RX_InitStructure.DMA_BufferSize = len;
+	DMA_RX_InitStructure.DMA_MemoryBaseAddr =pBuf;
+	DMA_RX_InitStructure.DMA_PeripheralBaseAddr =addr;
+
+	DMA_Init(W6100_DMA_CHANNEL_RX, &DMA_RX_InitStructure);
+
+	DMA_Cmd(W6100_DMA_CHANNEL_RX, ENABLE);
+	/* Waiting for the end of Data Transfer */
+	while(DMA_GetFlagStatus(DMA_RX_FLAG) == RESET);
+
+
+	DMA_ClearFlag(DMA_RX_FLAG);
+
+
+	DMA_Cmd(W6100_DMA_CHANNEL_RX, DISABLE);
+
+#elif defined USE_HAL_DRIVER
+
+#endif
+
+}
+
+inline void W6100CsEnable(void)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	GPIO_ResetBits(W6100_CS_PORT, W6100_CS_PIN);
+
+#elif defined USE_HAL_DRIVER
+
+	HAL_GPIO_WritePin(W6100_CS_PORT, W6100_CS_PIN, GPIO_PIN_RESET);
+#endif
+
+}
+
+inline void W6100CsDisable(void)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	GPIO_SetBits(W6100_CS_PORT, W6100_CS_PIN);
+
+#elif defined USE_HAL_DRIVER
+
+	HAL_GPIO_WritePin(W6100_CS_PORT, W6100_CS_PIN, GPIO_PIN_SET);
+#endif
+
+}
+
+inline void W6100ResetAssert(void)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	GPIO_ResetBits(W6100_RESET_PORT, W6100_RESET_PIN);
+
+#elif defined USE_HAL_DRIVER
+
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_RESET);
+#endif
+
+}
+
+inline void W6100ResetDeassert(void)
+{
+#ifdef USE_STDPERIPH_DRIVER
+
+	GPIO_SetBits(W6100_RESET_PORT, W6100_RESET_PIN);
+
+#elif defined USE_HAL_DRIVER
+
+	HAL_GPIO_WritePin(W6100_RESET_PORT, W6100_RESET_PIN, GPIO_PIN_SET);
+#endif
+
 }
 
 void W6100Reset(void)
 {
 #ifdef USE_STDPERIPH_DRIVER
-	myW6100.resetAssert();
+	W6100ResetAssert();
 	delay(10);
-	myW6100.resetDeassert();
+	W6100ResetDeassert();
 	delay(10);
 #elif defined USE_HAL_DRIVER
-	myW6100.resetAssert();
+	W6100ResetAssert();
 	HAL_Delay(10);
-	myW6100.resetDeassert();
+	W6100ResetDeassert();
 	HAL_Delay(10);
 #endif
 }
 
 #ifdef WIZCHIP_REGISTER_DUMP
 
-void register_read(void)
+void W6100Register_read(void)
 {
 	int i;
 	printf("                    ----register read----\r\n");
@@ -102,7 +322,7 @@ void register_read(void)
 	printf("\r\n");
 }
 
-void socket_register_read(uint8_t sn)
+void W6100SocketRegister_read(uint8_t sn)
 {
 	int i;
 	printf("                    ----Sn register read----\r\n");

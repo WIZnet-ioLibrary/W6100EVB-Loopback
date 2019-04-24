@@ -3,36 +3,77 @@
 
 //#define WIZCHIP_REGISTER_DUMP
 
-#include "board_init.h"
+#ifdef USE_STDPERIPH_DRIVER
+	#warning USE_STDPERIPH_DRIVER
 
-typedef struct wiz_InitInfo_t
-{
-    uint8_t (*spi_rb)(void);
-    void (*spi_wb)(uint8_t);
-    void (*spi_rbuf)(uint8_t*, datasize_t);
-    void (*spi_wbuf)(uint8_t*, datasize_t);
-    void (*cs_sel)(void);
-    void (*cs_desel)(void);
+#include "stm32f10x_conf.h"
+#include "serialCommand.h"
+#define DMA
 
-    iodata_t (*bus_rd)(uint32_t); 
-    void (*bus_wd)(uint32_t, iodata_t);
-    void (*bus_rbuf)(uint32_t, uint8_t*, datasize_t, uint8_t);
-    void (*bus_wbuf)(uint32_t, uint8_t*, datasize_t, uint8_t);
+#elif defined USE_HAL_DRIVER
+	#warning USE_HAL_DRIVER
+#include "main.h"
 
-    void (*resetAssert)(void);
-    void (*resetDeassert)(void);
+/* RESET */
+#define W6100_RESET_PIN		    GPIO_PIN_8
+#define W6100_RESET_PORT		GPIOD
 
-}wiz_InitInfo;
+/* SPI2 */
+#define W6100_CS_PIN			GPIO_PIN_7
+#define W6100_CS_PORT			GPIOD
 
+#define W6100_SPI_SIZE          1
+#define W6100_SPI_TIMEOUT       10
+void spi_set_func(SPI_HandleTypeDef *SPI_n);
+#else
+	#error Error!! STD_DRIVER not defined
 
-void wizchip_init_info(wiz_InitInfo *wiz_info);
+#endif
+
+#include "wizchip_conf.h"
+#include "mcu_init.h"
+
+#if (_WIZCHIP_IO_MODE_==_WIZCHIP_IO_MODE_BUS_INDIR_)
+	#ifdef DMA
+   	   #define BUS_DMA
+	#endif
+#elif(_WIZCHIP_IO_MODE_== _WIZCHIP_IO_MODE_SPI_VDM_)||(_WIZCHIP_IO_MODE_== _WIZCHIP_IO_MODE_SPI_FDM_)
+	#ifdef DMA
+		#define SPI_DMA
+	#endif
+#endif
+
 void W6100Initialze(void);
-void io6LibraryCallBack(void);
 void W6100Reset(void);
 
+uint8_t W6100SpiReadByte(void);
+void W6100SpiWriteByte(uint8_t byte);
+
+uint8_t W6100SpiDummyReadBurst(uint8_t* pBuf, uint16_t len);
+void W6100SpiDummyWriteBurst(uint8_t* pBuf, uint16_t len);
+
+#if defined SPI_DMA
+uint8_t W6100SpiReadBurst(uint8_t* pBuf, uint16_t len);
+void W6100SpiWriteBurst(uint8_t* pBuf, uint16_t len);
+#endif
+
+void W6100BusWriteByte(uint32_t addr, iodata_t data);
+iodata_t W6100BusReadByte(uint32_t addr);
+
+#if defined BUS_DMA
+void W6100BusWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_inc);
+void W6100BusReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc);
+#endif
+
+void W6100Reset(void);
+void W6100CsEnable(void);
+void W6100CsDisable(void);
+void W6100ResetAssert(void);
+void W6100ResetDeassert(void);
+
 #ifdef WIZCHIP_REGISTER_DUMP
-void register_read(void);
-void socket_register_read(uint8_t sn);
+void W6100Register_read(void);
+void W6100SocketRegister_read(uint8_t sn);
 #endif
 
 #endif

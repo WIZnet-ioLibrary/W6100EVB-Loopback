@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include "board_init.h"
+#include "wizchip_conf.h"
 #include "loopback.h"
+#include "board_init.h"
 
 wiz_NetInfo gWIZNETINFO = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},
 							.ip = {192,168,177,25},
