@@ -8,6 +8,7 @@
 
 #include "stm32f10x_conf.h"
 #include "serialCommand.h"
+#include "mcu_init.h"
 #define DMA
 
 #elif defined USE_HAL_DRIVER
@@ -31,7 +32,6 @@ void spi_set_func(SPI_HandleTypeDef *SPI_n);
 #endif
 
 #include "wizchip_conf.h"
-#include "mcu_init.h"
 
 #if (_WIZCHIP_IO_MODE_==_WIZCHIP_IO_MODE_BUS_INDIR_)
 	#ifdef DMA

@@ -2,8 +2,13 @@
 
 #ifdef USE_STDPERIPH_DRIVER
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
+#elif defined USE_HAL_DRIVER
+SPI_HandleTypeDef W6100_SPI;
+void spi_set_func(SPI_HandleTypeDef *SPI_n)
+{
+	W6100_SPI = *SPI_n;
+}
 #endif
-
 void W6100Initialze(void)
 {
 	W6100Reset();
@@ -13,7 +18,7 @@ void W6100Initialze(void)
 	#if defined SPI_DMA
 	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, W6100SpiReadBurst, W6100SpiWriteBurst);
 	#else
-	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, W6100SpiDummyReadBurst, W6100SpiDummyWriteBurst);
+	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, NULL, NULL);
 	#endif
 	/* CS function register */
 	reg_wizchip_cs_cbfunc(W6100CsEnable, W6100CsDisable);
@@ -22,7 +27,7 @@ void W6100Initialze(void)
 	#if defined BUS_DMA
 	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, W6100BusReadBurst, W6100BusWriteBurst);
 	#else
-	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, 0, 0);
+	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, NULL, NULL);
 	#endif
 #endif
 
@@ -86,17 +91,6 @@ void W6100SpiWriteByte(uint8_t byte)
 	HAL_SPI_TransmitReceive(&W6100_SPI, &byte, &rx, W6100_SPI_SIZE, W6100_SPI_TIMEOUT);
 #endif
 
-}
-
-uint8_t W6100SpiDummyReadBurst(uint8_t* pBuf, uint16_t len)
-{
-	printf("spiReadBurst is not exist\r\n");
-	return 0;
-}
-
-void W6100SpiDummyWriteBurst(uint8_t* pBuf, uint16_t len)
-{
-	printf("spiWriteBurst is not exist\r\n");
 }
 
 uint8_t W6100SpiReadBurst(uint8_t* pBuf, uint16_t len)
