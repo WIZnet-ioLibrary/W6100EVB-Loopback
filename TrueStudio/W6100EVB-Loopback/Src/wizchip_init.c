@@ -3,11 +3,6 @@
 #ifdef USE_STDPERIPH_DRIVER
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
 #elif defined USE_HAL_DRIVER
-SPI_HandleTypeDef W6100_SPI;
-void spi_set_func(SPI_HandleTypeDef *SPI_n)
-{
-	W6100_SPI = *SPI_n;
-}
 #endif
 void W6100Initialze(void)
 {
